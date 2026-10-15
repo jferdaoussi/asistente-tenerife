@@ -80,13 +80,31 @@ class RAGConfig:
         top_k: Número de fragmentos que se recuperan por consulta.
         min_similarity: Similitud mínima para considerar relevante un
             fragmento; por debajo, la guía "no tiene" la respuesta.
+        chunk_max_chars: Tamaño máximo de un fragmento en el chunking por
+            sitio (unos 300 tokens). Las secciones más largas se dividen por
+            sus puntos de interés.
+        fixed_chunk_size: Tamaño de los fragmentos en el chunking de tamaño
+            fijo, que se usa como referencia en la evaluación.
+        fixed_chunk_overlap: Solapamiento entre fragmentos consecutivos del
+            chunking de tamaño fijo.
+        embed_batch_size: Textos que se envían por petición de embeddings.
+
+    Calibración de ``min_similarity`` (15/10/2026): la mejor similitud de 15
+    preguntas que sí responde la guía fue de 0,624 a 0,818 (media 0,725); la
+    de 10 preguntas ajenas, de 0,553 a 0,684 (media 0,593). Con 0,62 pasan
+    todas las de la guía y se rechazan 9 de 10 ajenas; la que se cuela
+    ("¿Qué playas hay en Gran Canaria?", 0,684) la debe frenar el LLM.
     """
 
     embedding_model: str = "gemini-embedding-2"
     embedding_dim: int = 768
     collection_name: str = "guia_tenerife"
     top_k: int = 4
-    min_similarity: float = 0.5
+    min_similarity: float = 0.62
+    chunk_max_chars: int = 1200
+    fixed_chunk_size: int = 800
+    fixed_chunk_overlap: int = 150
+    embed_batch_size: int = 50
 
 
 @dataclass(frozen=True)

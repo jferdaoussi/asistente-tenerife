@@ -41,7 +41,7 @@ class LLMError(Exception):
     """Error del LLM tras agotar los reintentos y los modelos de respaldo."""
 
 
-def _friendly_message(err: errors.APIError) -> str:
+def friendly_message(err: errors.APIError) -> str:
     """Traduce un error de la API a un mensaje comprensible.
 
     Args:
@@ -155,14 +155,14 @@ class GeminiClient:
                 )
             except errors.APIError as err:
                 if err.code not in TRANSIENT_CODES:
-                    raise LLMError(_friendly_message(err)) from err
+                    raise LLMError(friendly_message(err)) from err
                 logger.warning("Modelo %s no disponible (%s)", model, err.code)
                 last_error = err
                 continue
             self.last_model = model
             self._log_usage(model, response, time.perf_counter() - start)
             return response
-        raise LLMError(_friendly_message(last_error)) from last_error
+        raise LLMError(friendly_message(last_error)) from last_error
 
     def generate_stream(
         self,
@@ -196,7 +196,7 @@ class GeminiClient:
                 first = next(stream)
             except errors.APIError as err:
                 if err.code not in TRANSIENT_CODES:
-                    raise LLMError(_friendly_message(err)) from err
+                    raise LLMError(friendly_message(err)) from err
                 logger.warning("Modelo %s no disponible (%s)", model, err.code)
                 last_error = err
                 continue
@@ -209,7 +209,7 @@ class GeminiClient:
                     "La respuesta se interrumpió. Repite la pregunta."
                 ) from err
             return
-        raise LLMError(_friendly_message(last_error)) from last_error
+        raise LLMError(friendly_message(last_error)) from last_error
 
     @staticmethod
     def _log_usage(
