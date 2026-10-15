@@ -1,0 +1,138 @@
+"""Configuración central del asistente.
+
+Reúne en un único lugar las rutas del proyecto, los parámetros del modelo,
+los del RAG y los de la memoria conversacional, para que sean visibles y
+fáciles de ajustar. La API key se lee del entorno (archivo ``.env``) y nunca
+se escribe en el código.
+
+Ejecutar ``python -m src.config`` muestra la configuración activa y comprueba
+que la clave está disponible, sin imprimirla.
+"""
+
+import os
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT_DIR / "data"
+GUIDE_PATH = DATA_DIR / "TENERIFE.pdf"
+CHROMA_DIR = ROOT_DIR / "chroma_db"
+LOG_DIR = ROOT_DIR / "logs"
+
+load_dotenv(ROOT_DIR / ".env")
+
+
+@dataclass(frozen=True)
+class ModelConfig:
+    """Parámetros de generación del LLM.
+
+    Attributes:
+        model: Identificador del modelo de Gemini.
+        temperature: Aleatoriedad del muestreo. Baja para que el asistente se
+            ciña a la guía en lugar de inventar.
+        top_p: Nucleus sampling; solo se muestrea entre los tokens que suman
+            esta probabilidad acumulada.
+        max_output_tokens: Longitud máxima de cada respuesta.
+        thinking_level: Cuánto "razona" el modelo antes de responder
+            (MINIMAL, LOW, MEDIUM, HIGH). Más razonamiento implica más
+            latencia y tokens; para un asistente turístico basta con LOW.
+        fallback_models: Modelos de respaldo que se prueban, en orden, si el
+            principal está saturado (errores 429/5xx).
+        retry_attempts: Intentos por modelo antes de pasar al siguiente.
+        timeout_s: Tiempo máximo de espera de cada petición (en streaming,
+            entre fragmentos), en segundos.
+
+    Elección del modelo principal (pruebas del 15/10/2026, capa gratuita):
+
+    - ``gemini-3.6-flash`` y ``gemini-3.8-flash`` solo permiten 20 peticiones
+      al día y 5 por minuto; un turno con herramientas gasta 2-3 peticiones,
+      lo que hace inviable la evaluación. Además, ``gemini-3.8-flash``
+      devolvía errores 503 por alta demanda (hasta 245 s de espera).
+    - ``gemini-3.5-flash-lite`` permite 500 peticiones al día y 15 por
+      minuto, responde sin gastar tokens de razonamiento y basta para
+      redactar respuestas a partir de fragmentos ya recuperados.
+
+    Los modelos Flash quedan como respaldo si se agota la cuota de Flash-Lite.
+    """
+
+    model: str = field(
+        default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+    )
+    temperature: float = 0.3
+    top_p: float = 0.95
+    max_output_tokens: int = 1024
+    thinking_level: str = "LOW"
+    fallback_models: tuple[str, ...] = ("gemini-3.6-flash", "gemini-3.8-flash")
+    retry_attempts: int = 2
+    timeout_s: int = 30
+
+
+@dataclass(frozen=True)
+class RAGConfig:
+    """Parámetros de la recuperación semántica.
+
+    Attributes:
+        embedding_model: Modelo que convierte texto en vectores.
+        embedding_dim: Dimensión de los vectores generados.
+        collection_name: Nombre de la colección en Chroma.
+        top_k: Número de fragmentos que se recuperan por consulta.
+        min_similarity: Similitud mínima para considerar relevante un
+            fragmento; por debajo, la guía "no tiene" la respuesta.
+    """
+
+    embedding_model: str = "gemini-embedding-2"
+    embedding_dim: int = 768
+    collection_name: str = "guia_tenerife"
+    top_k: int = 4
+    min_similarity: float = 0.5
+
+
+@dataclass(frozen=True)
+class MemoryConfig:
+    """Parámetros del historial conversacional.
+
+    Attributes:
+        max_history_tokens: Presupuesto de tokens para el historial; al
+            superarlo se resumen los turnos más antiguos.
+    """
+
+    max_history_tokens: int = 6000
+
+
+MODEL = ModelConfig()
+RAG = RAGConfig()
+MEMORY = MemoryConfig()
+
+
+def get_api_key() -> str:
+    """Devuelve la API key de Gemini leída del entorno.
+
+    Returns:
+        La clave definida en la variable ``GEMINI_API_KEY``.
+
+    Raises:
+        RuntimeError: Si la clave no está definida o sigue con el valor de
+            ejemplo de ``.env.example``.
+    """
+    key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not key or key == "pon-aqui-tu-clave":
+        raise RuntimeError(
+            "Falta GEMINI_API_KEY. Copia .env.example como .env y pega tu "
+            "clave de https://aistudio.google.com/apikey"
+        )
+    return key
+
+
+if __name__ == "__main__":
+    for name, cfg in (("Modelo", MODEL), ("RAG", RAG), ("Memoria", MEMORY)):
+        print(f"[{name}]")
+        for key, value in asdict(cfg).items():
+            print(f"  {key} = {value}")
+    print(f"[Guía] {GUIDE_PATH} (existe: {GUIDE_PATH.exists()})")
+    try:
+        get_api_key()
+        print("[API key] encontrada en el entorno")
+    except RuntimeError as err:
+        print(f"[API key] {err}")

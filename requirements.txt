@@ -1,0 +1,26 @@
+# Asistente turístico de Tenerife — dependencias (Python 3.12)
+
+# LLM y embeddings (Google Gemini)
+google-genai==2.31.0
+
+# RAG: lectura del PDF y base de datos vectorial
+pypdf==6.20.1
+chromadb==1.5.9
+
+# Utilidades
+python-dotenv==1.2.4
+pydantic==2.14.1
+requests==2.34.2
+
+# Notebook, análisis y gráficos
+jupyter==1.1.1
+ipykernel==7.4.0
+pandas==3.0.6
+matplotlib==3.11.2
+
+# Interfaz web
+gradio==6.30.0
+
+# Calidad de código y tests
+pytest==9.1.1
+ruff==0.17.1

@@ -1,0 +1,14 @@
+line-length = 88
+target-version = "py312"
+
+[lint]
+# E/W: PEP 8 · F: errores (pyflakes) · I: orden de imports
+# N: nombres PEP 8 · D: docstrings · B: bugs habituales
+select = ["E", "W", "F", "I", "N", "D", "B"]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.per-file-ignores]
+# Los tests no necesitan docstring en cada función
+"tests/*" = ["D"]

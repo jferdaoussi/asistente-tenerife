@@ -1,0 +1,27 @@
+# Secretos: la API key nunca se sube al repositorio
+.env
+
+# Entorno virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Artefactos regenerables (índice vectorial, caché y logs)
+chroma_db/
+cache/
+logs/
+
+# Gradio
+.gradio/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
