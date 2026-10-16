@@ -1,0 +1,36 @@
+{"id": "g01", "fidelidad": 2, "relevancia": 2, "comportamiento_ok": false, "nota": "Afirma que la guía menciona papas arrugadas con mojo y vinos de la tierra, lo que no aparece en ninguna fuente. Además, la guía sí dice dónde comprar gofio (molino de Chano, p. 9), pero la búsqueda no lo recuperó."}
+{"id": "g02", "fidelidad": 5, "relevancia": 3, "comportamiento_ok": false, "nota": "Solo da el enlace de Google Maps y no consulta la guía, que avisa de que a Punta de Teno solo se llega en guagua (línea 369)."}
+{"id": "g03", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g04", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g05", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g06", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g07", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g08", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g09", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g10", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g11", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g12", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g13", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": "Pierde un matiz de duda de la guía ('creo que se puede entrar al Parque del Drago'), sin importancia."}
+{"id": "g14", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g15", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g16", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g17", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g18", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "g19", "fidelidad": 4, "relevancia": 5, "comportamiento_ok": true, "nota": "Generaliza a 'varias partes de películas' cuando la guía habla de partes de Fast & Furious 6."}
+{"id": "g20", "fidelidad": 5, "relevancia": 2, "comportamiento_ok": false, "nota": "Fiel a sus fuentes (la búsqueda no devolvió nada), pero la guía sí explica 'chuso' (p. 12): fallo de recuperación."}
+{"id": "n01", "fidelidad": 5, "relevancia": 4, "comportamiento_ok": true, "nota": ""}
+{"id": "n02", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "n03", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "f01", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "f02", "fidelidad": 5, "relevancia": 4, "comportamiento_ok": true, "nota": ""}
+{"id": "t01", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "t02", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "t03", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "t04", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "c01", "fidelidad": 4, "relevancia": 5, "comportamiento_ok": true, "nota": "Pequeñas imprecisiones: 'aparcar cerca del Castillo' (la guía dice aparcar y luego ir hacia el castillo) y máxima de 25 °C (eran 25,6)."}
+{"id": "c02", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "r01", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "i01", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "i02", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "m01", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": ""}
+{"id": "m02", "fidelidad": 5, "relevancia": 5, "comportamiento_ok": true, "nota": "Los datos vienen de get_weather llamado en el turno anterior y coinciden; el registro de evaluación no muestra esas fuentes porque solo guarda las herramientas del último turno."}

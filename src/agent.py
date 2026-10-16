@@ -37,7 +37,11 @@ EMPTY_ANSWER = "No he podido generar una respuesta. ¿Puedes reformular la pregu
 
 @dataclass
 class ToolCallTrace:
-    """Una llamada a herramienta dentro de un turno."""
+    """Una llamada a herramienta dentro de un turno.
+
+    ``result`` es lo que recibió el LLM (fragmentos, datos del tiempo...): lo
+    usa el juez de la evaluación para comprobar la fidelidad de la respuesta.
+    """
 
     name: str
     args: dict[str, Any]
@@ -45,6 +49,7 @@ class ToolCallTrace:
     error: str | None
     latency_ms: int
     sources: list[str] = field(default_factory=list)
+    result: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -249,6 +254,7 @@ class TouristAgent:
                 error=result.get("error"),
                 latency_ms=round((time.perf_counter() - start) * 1000),
                 sources=[f["fuente"] for f in result.get("fragmentos", [])],
+                result=result,
             )
         )
         return types.Part(

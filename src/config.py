@@ -89,18 +89,24 @@ class RAGConfig:
             chunking de tamaño fijo.
         embed_batch_size: Textos que se envían por petición de embeddings.
 
-    Calibración de ``min_similarity`` (15/10/2026): la mejor similitud de 15
-    preguntas que sí responde la guía fue de 0,624 a 0,818 (media 0,725); la
-    de 10 preguntas ajenas, de 0,553 a 0,684 (media 0,593). Con 0,62 pasan
-    todas las de la guía y se rechazan 9 de 10 ajenas; la que se cuela
-    ("¿Qué playas hay en Gran Canaria?", 0,684) la debe frenar el LLM.
+    Calibración de ``min_similarity``:
+
+    - 15/10/2026, con 15 preguntas de la guía (mejor similitud de 0,624 a
+      0,818) y 10 ajenas (de 0,553 a 0,684): se fijó 0,62.
+    - 16/10/2026, evaluación con 36 preguntas: con 0,62 se descartaban
+      fragmentos correctos de consultas cortas que escribe el agente
+      ("pegarse un chuso": 0,598 en primera posición; "comprar gofio": La
+      Orotava con 0,614 en tercera). Se baja a 0,55: solo descarta lo
+      claramente ajeno, y la relevancia fina la decide el LLM, que ya elige
+      cuándo buscar y qué usar de cada fragmento (ver D6 en
+      docs/decisiones.md).
     """
 
     embedding_model: str = "gemini-embedding-2"
     embedding_dim: int = 768
     collection_name: str = "guia_tenerife"
     top_k: int = 4
-    min_similarity: float = 0.62
+    min_similarity: float = 0.55
     chunk_max_chars: int = 1200
     fixed_chunk_size: int = 800
     fixed_chunk_overlap: int = 150

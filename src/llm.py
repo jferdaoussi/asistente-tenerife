@@ -101,6 +101,7 @@ class GeminiClient:
         system_instruction: str | None = None,
         tools: list[types.Tool] | None = None,
         force_text: bool = False,
+        json_schema: dict | None = None,
     ) -> types.GenerateContentConfig:
         """Construye la configuración de generación de una petición.
 
@@ -109,6 +110,8 @@ class GeminiClient:
             tools: Herramientas que el modelo puede invocar.
             force_text: Prohíbe llamar a herramientas y obliga a responder con
                 texto (se usa al alcanzar el límite de vueltas del agente).
+            json_schema: Si se indica, la respuesta será un JSON que cumple
+                este esquema (salida estructurada; la usa el juez).
 
         Returns:
             Configuración lista para pasar al SDK.
@@ -129,6 +132,8 @@ class GeminiClient:
                 if force_text
                 else None
             ),
+            response_mime_type="application/json" if json_schema else None,
+            response_json_schema=json_schema,
             # Las herramientas las ejecuta nuestro propio bucle, no el SDK,
             # para poder validar argumentos, gestionar errores y registrarlas.
             automatic_function_calling=types.AutomaticFunctionCallingConfig(
@@ -142,6 +147,7 @@ class GeminiClient:
         system_instruction: str | None = None,
         tools: list[types.Tool] | None = None,
         force_text: bool = False,
+        json_schema: dict | None = None,
     ) -> types.GenerateContentResponse:
         """Genera una respuesta completa, con respaldo entre modelos.
 
@@ -150,6 +156,7 @@ class GeminiClient:
             system_instruction: Instrucciones de sistema.
             tools: Herramientas disponibles para el modelo.
             force_text: Obliga a responder con texto, sin herramientas.
+            json_schema: Esquema JSON que debe cumplir la respuesta.
 
         Returns:
             Respuesta del SDK (texto, llamadas a herramientas y uso de tokens).
@@ -157,7 +164,7 @@ class GeminiClient:
         Raises:
             LLMError: Si ningún modelo puede responder.
         """
-        config = self.build_config(system_instruction, tools, force_text)
+        config = self.build_config(system_instruction, tools, force_text, json_schema)
         last_error: errors.APIError | None = None
         for model in self.models:
             start = time.perf_counter()

@@ -118,17 +118,40 @@ consecuencias**.
   calidad con 4 veces menos espacio (técnica Matryoshka). Los prefijos
   asimétricos indican al modelo qué texto es pregunta y cuál documento.
 
-## D6 · Umbral de similitud: 0,62, calibrado con datos
+## D6 · Umbral de similitud: 0,62 → 0,55, recalibrado con la evaluación
 
 - **Contexto:** la búsqueda vectorial siempre devuelve algo, aunque no tenga
   relación con la pregunta.
-- **Decisión:** descartar fragmentos con similitud menor que 0,62.
-- **Por qué:** medido el 15/10/2026: la mejor similitud de 15 preguntas que
-  la guía sí responde fue de 0,624 a 0,818; la de 10 preguntas ajenas, de
-  0,553 a 0,684. Con 0,62 pasan las 15 de la guía y se rechazan 9 de 10.
-- **Consecuencias:** "¿Qué playas hay en Gran Canaria?" (0,684) supera el
-  umbral; la segunda barrera es el system prompt del LLM ("solo Tenerife y
-  solo lo que diga la guía").
+- **Decisión inicial (15/10/2026):** descartar fragmentos con similitud menor
+  que 0,62. La mejor similitud de 15 preguntas que la guía sí responde fue de
+  0,624 a 0,818; la de 10 preguntas ajenas, de 0,553 a 0,684. Con 0,62
+  pasaban las 15 de la guía y se rechazaban 9 de 10.
+- **Revisión (16/10/2026, evaluación con 36 preguntas):** el umbral
+  descartaba fragmentos correctos en las consultas cortas que redacta el
+  agente. En "pegarse un chuso", el fragmento correcto salía primero con
+  0,598; en "comprar gofio", La Orotava salía tercera con 0,614 y los cuatro
+  resultados quedaban por debajo de 0,62. El agente respondía "la guía no lo
+  incluye" y, en el caso del gofio, inventó que la guía mencionaba platos que
+  no aparecen. **Se baja a 0,55.**
+- **Por qué:** con la búsqueda como herramienta (D9), el LLM ya decide cuándo
+  buscar y qué usar de cada fragmento; el umbral solo tiene que descartar lo
+  claramente ajeno. Un umbral alto provoca falsos "no está en la guía", que
+  son peores que recibir algún fragmento poco relacionado.
+- **Consecuencias:** las preguntas ajenas casi siempre devuelven fragmentos;
+  la barrera frente a ellas es el system prompt ("solo Tenerife y solo lo que
+  diga la guía"), cuya eficacia se mide en la evaluación (fuera de dominio y
+  prompt injection). Los datos de calibración muestran que en este corpus las
+  similitudes están muy comprimidas (0,55-0,82), así que un umbral fijo
+  discrimina poco.
+- **Resultado (antes → después, junto con la regla 8 de "cómo llegar"):**
+  evidencia recuperada 87,5 % → 95,8 %; herramienta correcta 97 % → 100 %;
+  cita correcta 87 % → 91 %. Se corrigen los tres fallos sistemáticos (g01
+  ya no inventa, g02 da la indicación de la guagua, g20 responde). El
+  comportamiento global queda igual (94,4 %) por dos fallos nuevos sin
+  relación con el cambio (g12 añade un dato externo; m02 vuelve a preguntar
+  la zona pese al historial), que muestran la variabilidad entre ejecuciones
+  del LLM. La latencia media sube de 12 a 15 s (búsqueda extra y más
+  fragmentos en el contexto).
 
 ## D7 · Limpieza de marcas de enlace del PDF
 
@@ -240,3 +263,43 @@ consecuencias**.
   12-30 s con 2-3 vueltas (a medir en la evaluación, junto con el nivel de
   razonamiento LOW frente a MINIMAL). La fidelidad depende de que el modelo
   siga las reglas: se medirá con un juez LLM.
+
+## D10 · Evaluación con conjunto fijo, evidencia literal y juez LLM validado
+
+- **Contexto:** hay que medir la calidad del RAG, del uso de herramientas y
+  del comportamiento, y comparar alternativas (chunkers, razonamiento) con
+  la cuota gratuita (15 peticiones/min, 500/día).
+- **Decisiones:**
+  1. **Conjunto fijo de 36 preguntas** (`eval/preguntas.jsonl`): 20 que
+     responde la guía, 3 que no cubre (incluida la trampa del horario del
+     Siam Park), 2 fuera de dominio, 4 del tiempo (fechas relativas que se
+     resuelven al ejecutar), 2 combinadas, 1 de ruta, 2 de prompt injection
+     y 2 de seguimiento.
+  2. **Frase de evidencia literal** en cada pregunta de la guía ("molino de
+     Chano"): un fragmento es correcto si la contiene. Así, recall@k y MRR son
+     comparables entre chunkers que trocean distinto. Las páginas esperadas
+     se calculan buscando la frase en el PDF.
+  3. **Comprobaciones automáticas sin LLM**: herramienta correcta, lugar y
+     fecha del tiempo, evidencia recuperada, página citada y enlace.
+  4. **Juez LLM** (Flash-Lite, temperatura 0, salida JSON con esquema) que
+     lista cada afirmación y si las fuentes la respaldan antes de puntuar
+     fidelidad, relevancia y comportamiento.
+  5. **Validación del juez** con una revisión independiente de las 36
+     respuestas hecha por Claude (un modelo de otra familia y más potente),
+     sin ver las notas del juez. Criterio fijado de antemano: acuerdo en
+     fidelidad (±1) ≥ 80 % y ninguna alucinación de la referencia aprobada.
+     - Primera versión: 94 % de acuerdo, pero aprobó la alucinación de g01
+       (no listó la frase "la guía menciona papas arrugadas", escondida junto
+       a una negativa) → **no fiable**.
+     - Plan B: prompt corregido (las afirmaciones sobre lo que la guía
+       menciona cuentan aunque vayan junto a una negativa) y arnés corregido
+       (las fuentes incluyen herramientas de turnos anteriores). Resultado:
+       100 % de acuerdo ±1, 94 % exacto, 97 % en comportamiento, ninguna
+       alucinación aprobada → **fiable**. Sesgo residual: algo indulgente con
+       imprecisiones menores (da 5 donde la referencia da 4).
+  6. **Resultados en caché** (`eval/resultados/`) y reanudables pregunta a
+     pregunta; un cliente con límite de 12 peticiones/min y caché en disco de
+     los vectores de las preguntas.
+- **Consecuencias:** la validación del juez se hizo sobre las mismas
+  respuestas con las que se corrigió su prompt; se comprueba fuera de muestra
+  con las respuestas de las ejecuciones siguientes.
