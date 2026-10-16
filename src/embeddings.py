@@ -6,10 +6,10 @@ distinta (embedding asimétrico) porque una pregunta corta y un párrafo largo
 no se parecen en la forma aunque hablen de lo mismo.
 """
 
-from google.genai import errors, types
+from google.genai import types
 
 from src.config import RAG, RAGConfig
-from src.llm import GeminiClient, LLMError, friendly_message
+from src.llm import REQUEST_ERRORS, GeminiClient, LLMError, friendly_message
 
 DOCUMENT_TEMPLATE = "title: {title} | text: {text}"
 QUERY_TEMPLATE = "task: search result | query: {query}"
@@ -57,7 +57,7 @@ class GeminiEmbedder:
                         output_dimensionality=self.config.embedding_dim
                     ),
                 )
-            except errors.APIError as err:
+            except REQUEST_ERRORS as err:
                 raise LLMError(friendly_message(err)) from err
             vectors.extend(embedding.values for embedding in response.embeddings)
         return vectors

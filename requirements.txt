@@ -2,6 +2,7 @@
 
 # LLM y embeddings (Google Gemini)
 google-genai==2.31.0
+httpx==0.28.1  # cliente HTTP del SDK; se capturan sus errores de red
 
 # RAG: lectura del PDF y base de datos vectorial
 pypdf==6.20.1

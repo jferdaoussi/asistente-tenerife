@@ -17,6 +17,7 @@ import logging
 import time
 from collections.abc import Iterator
 
+import httpx
 from google import genai
 from google.genai import errors, types
 
@@ -26,6 +27,11 @@ logger = logging.getLogger(__name__)
 
 #: Códigos HTTP que indican saturación o fallo temporal del servicio.
 TRANSIENT_CODES = {408, 429, 500, 502, 503, 504}
+
+#: Errores que puede lanzar una petición: los de la API (con código HTTP) y
+#: los de red (tiempo de espera agotado, conexión cortada), que el SDK no
+#: convierte en ``APIError``.
+REQUEST_ERRORS = (errors.APIError, httpx.TransportError)
 
 #: Mensajes para el usuario según el código de error de la API.
 FRIENDLY_ERRORS = {
@@ -41,15 +47,26 @@ class LLMError(Exception):
     """Error del LLM tras agotar los reintentos y los modelos de respaldo."""
 
 
-def friendly_message(err: errors.APIError) -> str:
-    """Traduce un error de la API a un mensaje comprensible.
+def is_transient(err: Exception) -> bool:
+    """True si el fallo es pasajero y merece probar de nuevo u otro modelo."""
+    if isinstance(err, httpx.TransportError):
+        return True
+    return isinstance(err, errors.APIError) and err.code in TRANSIENT_CODES
+
+
+def friendly_message(err: Exception) -> str:
+    """Traduce un error de la API o de red a un mensaje comprensible.
 
     Args:
-        err: Excepción lanzada por el SDK de Gemini.
+        err: Excepción lanzada por el SDK de Gemini o por la red.
 
     Returns:
         Mensaje en español apto para mostrar al usuario.
     """
+    if isinstance(err, httpx.TransportError):
+        return "Gemini no ha respondido a tiempo. Inténtalo de nuevo en unos segundos."
+    if not isinstance(err, errors.APIError):
+        return "Error inesperado al llamar a Gemini."
     # Gemini responde a una clave inválida con un 400, no con un 401.
     if "API key" in (err.message or ""):
         return FRIENDLY_ERRORS[401]
@@ -165,17 +182,17 @@ class GeminiClient:
             LLMError: Si ningún modelo puede responder.
         """
         config = self.build_config(system_instruction, tools, force_text, json_schema)
-        last_error: errors.APIError | None = None
+        last_error: Exception | None = None
         for model in self.models:
             start = time.perf_counter()
             try:
                 response = self._client.models.generate_content(
                     model=model, contents=contents, config=config
                 )
-            except errors.APIError as err:
-                if err.code not in TRANSIENT_CODES:
+            except REQUEST_ERRORS as err:
+                if not is_transient(err):
                     raise LLMError(friendly_message(err)) from err
-                logger.warning("Modelo %s no disponible (%s)", model, err.code)
+                logger.warning("Modelo %s no disponible (%s)", model, _code(err))
                 last_error = err
                 continue
             self.last_model = model
@@ -208,24 +225,26 @@ class GeminiClient:
             LLMError: Si ningún modelo puede responder o la respuesta se corta.
         """
         config = self.build_config(system_instruction, tools, force_text)
-        last_error: errors.APIError | None = None
+        last_error: Exception | None = None
         for model in self.models:
             try:
                 stream = self._client.models.generate_content_stream(
                     model=model, contents=contents, config=config
                 )
-                first = next(stream)
-            except errors.APIError as err:
-                if err.code not in TRANSIENT_CODES:
+                first = next(stream, None)
+            except REQUEST_ERRORS as err:
+                if not is_transient(err):
                     raise LLMError(friendly_message(err)) from err
-                logger.warning("Modelo %s no disponible (%s)", model, err.code)
+                logger.warning("Modelo %s no disponible (%s)", model, _code(err))
                 last_error = err
                 continue
             self.last_model = model
+            if first is None:  # respuesta vacía: la gestiona quien llama
+                return
             yield first
             try:
                 yield from stream
-            except errors.APIError as err:
+            except REQUEST_ERRORS as err:
                 raise LLMError(
                     "La respuesta se interrumpió. Repite la pregunta."
                 ) from err
@@ -253,3 +272,8 @@ class GeminiClient:
             usage.candidates_token_count if usage else None,
             usage.thoughts_token_count if usage else None,
         )
+
+
+def _code(err: Exception) -> str:
+    """Código HTTP de un error de la API o el tipo de un error de red."""
+    return str(getattr(err, "code", None) or type(err).__name__)
