@@ -134,9 +134,8 @@ _PLACE_INDEX = {_normalize(name): name for name in PLACES}
 class WeatherRequest(BaseModel):
     """Argumentos de ``get_weather``.
 
-    Su esquema JSON (``WeatherRequest.model_json_schema()``) es el que se le
-    da al LLM para que sepa cómo pedir la herramienta, de modo que el esquema
-    y la validación salen de la misma definición.
+    Su esquema JSON es el que se le da al LLM (ver ``src/tools.py``), de modo
+    que el esquema y la validación salen de la misma definición.
     """
 
     fecha: date = Field(
@@ -147,8 +146,9 @@ class WeatherRequest(BaseModel):
     )
     lugar: Lugar = Field(
         description=(
-            "Lugar de Tenerife. El tiempo cambia mucho entre zonas de la isla, "
-            "así que elige el más cercano al plan del usuario."
+            "Sitio de Tenerife indicado por el usuario o el más cercano a él. "
+            "El tiempo cambia mucho entre zonas de la isla: si el usuario no "
+            "ha indicado sitio ni zona, no elijas uno; pregúntale primero."
         )
     )
 
@@ -186,23 +186,6 @@ class WeatherRequest(BaseModel):
                 },
             )
         return value
-
-
-def tool_declaration() -> dict[str, Any]:
-    """Declaración de la herramienta en JSON Schema, tal como la verá el LLM.
-
-    Se genera a partir de :class:`WeatherRequest`, sin el título ni el
-    docstring de la clase (dirigidos a desarrolladores, no al modelo).
-
-    Returns:
-        Diccionario con ``name``, ``description`` y ``parameters``.
-    """
-    schema = WeatherRequest.model_json_schema()
-    schema.pop("title", None)
-    schema.pop("description", None)
-    for prop in schema["properties"].values():
-        prop.pop("title", None)
-    return {"name": TOOL_NAME, "description": TOOL_DESCRIPTION, "parameters": schema}
 
 
 class WeatherAPIError(Exception):

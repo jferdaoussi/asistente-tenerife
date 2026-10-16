@@ -111,12 +111,43 @@ class RAGConfig:
 class MemoryConfig:
     """Parámetros del historial conversacional.
 
+    La API del LLM no guarda estado: en cada petición se reenvía el historial.
+    Para acotar su tamaño se aplican tres niveles:
+
+    1. El último turno se conserva completo, con los resultados de las
+       herramientas (fragmentos de la guía, datos del tiempo).
+    2. Los ``keep_recent_turns`` turnos más recientes conservan solo el texto
+       de la pregunta y de la respuesta: los resultados de herramientas
+       antiguos ocupan mucho y se pueden volver a pedir.
+    3. Si el prompt supera ``max_history_tokens``, los turnos anteriores se
+       resumen con el LLM en un párrafo con el perfil del viajero (destino,
+       fechas, con quién viaja, intereses) y lo ya recomendado.
+
     Attributes:
-        max_history_tokens: Presupuesto de tokens para el historial; al
-            superarlo se resumen los turnos más antiguos.
+        max_history_tokens: Presupuesto de tokens del prompt (instrucciones,
+            herramientas e historial). Se mide con el recuento que devuelve
+            la propia API en cada respuesta.
+        keep_recent_turns: Turnos recientes que se conservan literalmente.
+        summary_max_words: Longitud máxima del resumen de turnos antiguos.
     """
 
     max_history_tokens: int = 6000
+    keep_recent_turns: int = 3
+    summary_max_words: int = 120
+
+
+@dataclass(frozen=True)
+class AgentConfig:
+    """Parámetros del bucle del agente.
+
+    Attributes:
+        max_rounds: Vueltas máximas del bucle (cada vuelta es una petición al
+            LLM, que puede pedir varias herramientas a la vez). Al alcanzarlo,
+            se fuerza una respuesta final sin herramientas. Evita bucles por
+            fallos repetidos que agotarían la cuota (15 peticiones/min).
+    """
+
+    max_rounds: int = 4
 
 
 @dataclass(frozen=True)
@@ -147,6 +178,7 @@ class WeatherConfig:
 MODEL = ModelConfig()
 RAG = RAGConfig()
 MEMORY = MemoryConfig()
+AGENT = AgentConfig()
 WEATHER = WeatherConfig()
 TOOL_LOG_PATH = LOG_DIR / "tools.jsonl"
 
@@ -175,6 +207,7 @@ if __name__ == "__main__":
         ("Modelo", MODEL),
         ("RAG", RAG),
         ("Memoria", MEMORY),
+        ("Agente", AGENT),
         ("Tiempo", WEATHER),
     )
     for name, cfg in configs:

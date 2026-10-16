@@ -100,12 +100,15 @@ class GeminiClient:
         self,
         system_instruction: str | None = None,
         tools: list[types.Tool] | None = None,
+        force_text: bool = False,
     ) -> types.GenerateContentConfig:
         """Construye la configuración de generación de una petición.
 
         Args:
             system_instruction: Instrucciones de sistema (rol y reglas).
             tools: Herramientas que el modelo puede invocar.
+            force_text: Prohíbe llamar a herramientas y obliga a responder con
+                texto (se usa al alcanzar el límite de vueltas del agente).
 
         Returns:
             Configuración lista para pasar al SDK.
@@ -119,6 +122,13 @@ class GeminiClient:
                 thinking_level=self.config.thinking_level
             ),
             tools=tools,
+            tool_config=(
+                types.ToolConfig(
+                    function_calling_config=types.FunctionCallingConfig(mode="NONE")
+                )
+                if force_text
+                else None
+            ),
             # Las herramientas las ejecuta nuestro propio bucle, no el SDK,
             # para poder validar argumentos, gestionar errores y registrarlas.
             automatic_function_calling=types.AutomaticFunctionCallingConfig(
@@ -131,6 +141,7 @@ class GeminiClient:
         contents: str | list[types.Content],
         system_instruction: str | None = None,
         tools: list[types.Tool] | None = None,
+        force_text: bool = False,
     ) -> types.GenerateContentResponse:
         """Genera una respuesta completa, con respaldo entre modelos.
 
@@ -138,6 +149,7 @@ class GeminiClient:
             contents: Pregunta suelta o historial de la conversación.
             system_instruction: Instrucciones de sistema.
             tools: Herramientas disponibles para el modelo.
+            force_text: Obliga a responder con texto, sin herramientas.
 
         Returns:
             Respuesta del SDK (texto, llamadas a herramientas y uso de tokens).
@@ -145,7 +157,7 @@ class GeminiClient:
         Raises:
             LLMError: Si ningún modelo puede responder.
         """
-        config = self.build_config(system_instruction, tools)
+        config = self.build_config(system_instruction, tools, force_text)
         last_error: errors.APIError | None = None
         for model in self.models:
             start = time.perf_counter()
@@ -169,6 +181,7 @@ class GeminiClient:
         contents: str | list[types.Content],
         system_instruction: str | None = None,
         tools: list[types.Tool] | None = None,
+        force_text: bool = False,
     ) -> Iterator[types.GenerateContentResponse]:
         """Genera una respuesta por fragmentos (streaming).
 
@@ -179,6 +192,7 @@ class GeminiClient:
             contents: Pregunta suelta o historial de la conversación.
             system_instruction: Instrucciones de sistema.
             tools: Herramientas disponibles para el modelo.
+            force_text: Obliga a responder con texto, sin herramientas.
 
         Yields:
             Fragmentos de la respuesta a medida que llegan.
@@ -186,7 +200,7 @@ class GeminiClient:
         Raises:
             LLMError: Si ningún modelo puede responder o la respuesta se corta.
         """
-        config = self.build_config(system_instruction, tools)
+        config = self.build_config(system_instruction, tools, force_text)
         last_error: errors.APIError | None = None
         for model in self.models:
             try:

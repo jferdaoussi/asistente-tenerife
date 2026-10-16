@@ -6,7 +6,7 @@ import pytest
 import requests
 
 from src import tool_log, weather
-from src.weather import DAILY_FIELDS, PLACES, get_weather, tool_declaration
+from src.weather import DAILY_FIELDS, PLACES, get_weather
 
 TODAY = date(2026, 10, 16)
 
@@ -191,17 +191,3 @@ def test_client_error_is_not_retried(api):
 def test_malformed_response_is_handled(api, data):
     api(FakeResponse(data=data))
     assert get_weather("2026-10-17", "Masca")["error"] == "respuesta_invalida"
-
-
-# --- Esquema para el LLM ----------------------------------------------------
-
-
-def test_tool_declaration_is_clean_json_schema():
-    declaration = tool_declaration()
-    params = declaration["parameters"]
-
-    assert declaration["name"] == "get_weather"
-    assert params["required"] == ["fecha", "lugar"]
-    assert params["properties"]["fecha"]["format"] == "date"
-    assert params["properties"]["lugar"]["enum"] == list(PLACES)
-    assert "description" not in params  # sin el docstring para desarrolladores
