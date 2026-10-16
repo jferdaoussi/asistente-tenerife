@@ -119,9 +119,36 @@ class MemoryConfig:
     max_history_tokens: int = 6000
 
 
+@dataclass(frozen=True)
+class WeatherConfig:
+    """Parámetros de la herramienta ``get_weather`` (API de Open-Meteo).
+
+    Attributes:
+        api_url: Endpoint de pronóstico de Open-Meteo (gratuito, sin clave).
+        timezone: Zona horaria para calcular "hoy" y las horas de sol.
+        max_days_ahead: Último día con pronóstico, contado desde hoy. La API
+            rechaza fechas posteriores (comprobado el 16/10/2026: hoy+15).
+        reliable_days: A partir de este día se avisa de que el pronóstico es
+            orientativo.
+        timeout_s: Tiempo máximo de espera de cada petición, en segundos.
+        max_attempts: Intentos ante errores transitorios (timeout, 5xx).
+        retry_delay_s: Espera entre intentos, en segundos.
+    """
+
+    api_url: str = "https://api.open-meteo.com/v1/forecast"
+    timezone: str = "Atlantic/Canary"
+    max_days_ahead: int = 15
+    reliable_days: int = 7
+    timeout_s: float = 10.0
+    max_attempts: int = 2
+    retry_delay_s: float = 1.0
+
+
 MODEL = ModelConfig()
 RAG = RAGConfig()
 MEMORY = MemoryConfig()
+WEATHER = WeatherConfig()
+TOOL_LOG_PATH = LOG_DIR / "tools.jsonl"
 
 
 def get_api_key() -> str:
@@ -144,7 +171,13 @@ def get_api_key() -> str:
 
 
 if __name__ == "__main__":
-    for name, cfg in (("Modelo", MODEL), ("RAG", RAG), ("Memoria", MEMORY)):
+    configs = (
+        ("Modelo", MODEL),
+        ("RAG", RAG),
+        ("Memoria", MEMORY),
+        ("Tiempo", WEATHER),
+    )
+    for name, cfg in configs:
         print(f"[{name}]")
         for key, value in asdict(cfg).items():
             print(f"  {key} = {value}")

@@ -141,3 +141,50 @@ consecuencias**.
 - **Consecuencias:** quedan frases como "aparcar por aquí" sin referencia
   (limitación de la fuente). Para indicar cómo llegar a un sitio se usará un
   enlace de búsqueda de Google Maps generado a partir de su nombre.
+
+## D8 · `get_weather`: Open-Meteo, solo pronóstico, por lugar de la guía
+
+- **Contexto:** el enunciado exige una función `get_weather(fecha)` con
+  esquema, validación, manejo de errores y registro de intentos. Límites
+  reales de Open-Meteo medidos el 16/10/2026: el pronóstico llega hasta hoy +
+  15 días (después, HTTP 400) y la misma API devuelve datos de días pasados,
+  que no coinciden con los de su API de histórico (ayer: 26,7 °C frente a
+  28,9 °C de máxima).
+- **Decisiones:**
+  1. **Open-Meteo**: gratuita, sin clave y sin registro.
+  2. **Solo de hoy a hoy + 15 días.** Las fechas pasadas son un error
+     controlado: la herramienta sirve para planificar, y ofrecer el pasado
+     obligaría a elegir entre dos fuentes que no coinciden.
+  3. **Parámetro `lugar` con lista cerrada de 16 lugares de la guía.**
+     Tenerife tiene microclimas: el 17/10/2026 se pronosticaban 7 °C de
+     máxima en la cumbre del Teide y 28 °C en Punta de Teno. Coordenadas fijas
+     en el código (geocodificación de Open-Meteo o punto de visita de la
+     guía), sin geocodificar en cada llamada.
+  4. **Validación en nuestro código antes de llamar a la API** (Pydantic):
+     formato `AAAA-MM-DD`, rango de fechas y lugar conocido; se aceptan
+     variantes sin tildes ni mayúsculas. Ahorra peticiones y da mensajes
+     claros en español ("disponible a partir del ...").
+  5. **Un único modelo Pydantic** (`WeatherRequest`) genera el JSON Schema
+     que ve el LLM y valida los argumentos: esquema y validación no pueden
+     desincronizarse.
+  6. **Los errores se devuelven al LLM como datos** (`{"ok": false, "error",
+     "mensaje"}`), nunca como excepciones, para que pueda explicarlos,
+     corregir sus argumentos (p. ej. "Mazca" → "Masca" con la lista de lugares
+     válidos) o preguntar al usuario.
+  7. **Salida filtrada a 13 datos útiles para un turista**: cielo (código WMO
+     traducido a texto), temperaturas, sensación térmica, lluvia, viento y
+     rachas, UV, humedad, amanecer y atardecer; unidades en el nombre de cada
+     campo. Quien lee la salida es el LLM: menos campos implican menos tokens
+     y menos ruido. Aviso de fiabilidad a partir de 7 días.
+  8. **Reintento solo ante fallos transitorios** (timeout, conexión, 429,
+     5xx), con 2 intentos y 1 s de espera; un 4xx no se reintenta.
+  9. **Registro JSON Lines** (`logs/tools.jsonl`): una línea por intento con
+     argumentos, etapa (validación o API), número de intento, resultado o
+     error, y latencia.
+- **Quién resuelve las fechas relativas:** el LLM convierte "el sábado" en
+  `2026-10-17`; para ello el system prompt le indicará la fecha de hoy en
+  Canarias (Fase 4). El código no se fía y lo valida.
+- **Consecuencias:** no hay tiempo para sitios fuera de la lista, como pueblos
+  no mencionados en la guía (el LLM elegirá el lugar más cercano). La calima
+  (polvo del Sáhara), muy relevante en Canarias, requiere la API de calidad
+  del aire de Open-Meteo: mejora futura.
