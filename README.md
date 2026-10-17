@@ -26,12 +26,12 @@ Cloud Computing y DevOps (Pontia).
 
 ```
 asistente-tenerife/
+├── notebook/       # Notebook principal (asistente_tenerife.ipynb)
 ├── data/           # Guía turística (TENERIFE.pdf)
 ├── src/            # Código del asistente (módulos reutilizables)
-├── notebooks/      # Notebook principal con la demostración
 ├── eval/           # Conjunto de preguntas y resultados de la evaluación
 ├── tests/          # Tests automáticos (pytest)
-├── docs/           # Informe final
+├── docs/           # Decisiones técnicas e informe final
 ├── requirements.txt
 └── .env.example    # Plantilla de configuración de la API key
 ```
@@ -65,3 +65,24 @@ python -m src.config
 ```
 
 El archivo `.env` está en `.gitignore` y nunca se sube al repositorio.
+
+## Ejecutar el notebook
+
+El notebook principal es `notebook/asistente_tenerife.ipynb`. Se entrega con
+las salidas guardadas, así que los resultados se ven sin ejecutarlo.
+
+Para ejecutarlo hay que usar como kernel el entorno virtual del proyecto
+(`.venv`), que es donde están instaladas las dependencias:
+
+- **VS Code:** *Select Kernel* → *Python Environments* → `.venv`.
+- **Jupyter:** registra el entorno una vez y elige *Python (asistente-tenerife)*
+  en *Kernel → Change kernel*:
+
+```bash
+python -m ipykernel install --user --name asistente-tenerife --display-name "Python (asistente-tenerife)"
+jupyter lab notebook/asistente_tenerife.ipynb
+```
+
+La primera celda añade la raíz del repositorio a la ruta de importación, de
+modo que el notebook usa los módulos de `src/`. Sin clave de Gemini, las
+celdas que llaman a la API muestran un aviso y el resto funciona.

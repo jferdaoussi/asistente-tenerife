@@ -89,13 +89,15 @@ consecuencias**.
   - `chunk_recursive`: el `RecursiveCharacterTextSplitter` **real** de
     LangChain (`langchain-text-splitters`), la referencia del sector.
 
-  Análisis estructural (15/10/2026, sin embeddings):
+  Análisis estructural (sin embeddings; reproducible en la sección 3 del
+  notebook: "mezcla" = aparece una marca de sitio "•" dentro del fragmento;
+  "a mitad de frase" = empieza en minúscula y no es una viñeta):
 
   | Estrategia | Fragmentos | Mezclan 2 sitios | Empiezan a mitad de frase | Con sitio y zona |
   |---|---|---|---|---|
   | Por sitio (propia) | 20 | 0 | 0 | 20 |
   | Tamaño fijo (propia) | 24 | 12 | 19 | 0 |
-  | LangChain recursivo | 27 | 9 | 10 | 0 |
+  | LangChain recursivo | 27 | 9 | 1 | 0 |
 
   La comparación definitiva se hace en la evaluación, con las mismas
   preguntas y métricas de recuperación para las tres. Caso a vigilar: en
@@ -259,6 +261,12 @@ consecuencias**.
     repeticiones posteriores, respuestas fieles a los fragmentos.
   - Gemini devolvió en ocasiones una respuesta vacía (`STOP` sin contenido) →
     la vuelta se reintenta una vez; si persiste, mensaje de disculpa.
+  - Tras "nos alojamos en el Puerto de la Cruz", a "¿qué tiempo hará
+    mañana?" volvía a preguntar la zona (también en m02 de la evaluación):
+    la regla 5 decía "si no indica lugar y la conversación no lo deja claro,
+    pregunta" y el modelo aplicaba solo la segunda mitad. Se reescribió en
+    positivo y por orden: sitio del usuario → sitio de la conversación →
+    solo si no hay ninguno, preguntar. Comprobado en la misma conversación.
 - **Consecuencias:** latencia de 3-4 s en respuestas sin herramientas y de
   12-30 s con 2-3 vueltas (a medir en la evaluación, junto con el nivel de
   razonamiento LOW frente a MINIMAL). La fidelidad depende de que el modelo
@@ -303,3 +311,22 @@ consecuencias**.
 - **Consecuencias:** la validación del juez se hizo sobre las mismas
   respuestas con las que se corrigió su prompt; se comprueba fuera de muestra
   con las respuestas de las ejecuciones siguientes.
+
+## D11 · Claves de la API: cada ejecutor usa la suya; la app, un secreto del servidor
+
+- **Contexto:** el enunciado pide gestionar la clave con variables de
+  entorno o un gestor seguro y que el prototipo sea reproducible, pero no
+  indica con qué clave se ejecuta al corregir.
+- **Decisión:**
+  - **Notebook y código:** cada persona usa su propia clave gratuita de
+    Gemini en `.env` (plantilla en `.env.example`; instrucciones en el
+    README). La clave del autor no se comparte ni se incluye en el repo.
+  - **Notebook entregado con las salidas guardadas**, para que los
+    resultados se vean sin ejecutarlo; sin clave, las celdas que llaman a la
+    API muestran un aviso en lugar de fallar.
+  - **App web desplegada:** usa la clave del autor como secreto del servidor
+    (nunca visible para quien la usa), con límites de uso.
+- **Alternativas descartadas:** clave en el repositorio (quedaría en el
+  historial de git y Google revoca las claves que detecta expuestas);
+  enviar la clave al profesor (cuota compartida y ligada a la cuenta del
+  autor).

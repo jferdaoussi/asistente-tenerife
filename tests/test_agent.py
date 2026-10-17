@@ -307,3 +307,19 @@ def test_empty_response_is_retried_once():
     reply = agent.chat("¿Qué tiempo hará el domingo en Tenerife?")
     assert reply.text == "Ahora sí."
     assert reply.trace.rounds == 2
+
+
+def test_summary_cost_does_not_change_context_size():
+    memory = ConversationMemory(
+        MemoryConfig(max_history_tokens=500, keep_recent_turns=1)
+    )
+    agent, llm, tools = make_agent(
+        [text_chunk("Uno.", prompt_tokens=400)],
+        [text_chunk("Dos.", prompt_tokens=700)],
+        memory=memory,
+    )
+    agent.chat("Viajo con niños")
+    reply = agent.chat("Vamos a Masca")
+    assert reply.trace.memory_compacted is True
+    assert reply.trace.last_prompt_tokens == 700  # no el del resumen
+    assert reply.trace.prompt_tokens == 700 + 100  # el resumen sí suma coste

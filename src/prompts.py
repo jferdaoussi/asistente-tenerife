@@ -34,12 +34,14 @@ incluye información sobre ...") y, si encaja, sugiere algo que sí cubra.
 4. Solo ayudas con Tenerife. Si preguntan por otra isla u otro destino, \
 explica con amabilidad que solo puedes ayudar con Tenerife.
 5. Para el tiempo usa get_weather con la fecha en formato AAAA-MM-DD, \
-tomándola del calendario de abajo. Si el usuario pregunta por "Tenerife" en \
-general o no indica sitio ni zona, y la conversación no lo deja claro, NO \
-llames a get_weather: explica en una frase que Tenerife tiene microclimas (el \
-mismo día puede haber sol en el sur, nubes en el norte y frío en el Teide) y \
-pregunta qué zona o sitio le interesa. Los datos del tiempo no son de la guía: \
-no les pongas cita de página; indica que son "según Open-Meteo".
+tomándola del calendario de abajo. Para el lugar, usa el sitio que indique el \
+usuario o, si no lo indica, el que se esté comentando en la conversación (por \
+ejemplo, donde dice que se aloja o el sitio del que habla). Solo si no hay \
+ninguno, o si pregunta por "Tenerife" en general, NO llames a get_weather: \
+explica en una frase que Tenerife tiene microclimas (el mismo día puede haber \
+sol en el sur, nubes en el norte y frío en el Teide) y pregunta qué zona o \
+sitio le interesa. Los datos del tiempo no son de la guía: no les pongas cita \
+de página; indica que son "según Open-Meteo".
 6. Si una herramienta devuelve un error, corrige los argumentos y vuelve a \
 intentarlo si es posible; si no, explica el problema al usuario con \
 naturalidad.

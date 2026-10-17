@@ -96,14 +96,27 @@ class TurnTrace:
             seen.update(dict.fromkeys(call.sources))
         return list(seen)
 
-    def add_usage(self, usage: types.GenerateContentResponseUsageMetadata | None):
-        """Suma el consumo de tokens de una petición."""
+    def add_usage(
+        self,
+        usage: types.GenerateContentResponseUsageMetadata | None,
+        conversation: bool = True,
+    ) -> None:
+        """Suma el consumo de tokens de una petición.
+
+        Args:
+            usage: Recuento de tokens que devuelve la API.
+            conversation: True si la petición llevaba el historial de la
+                conversación; solo esas miden el tamaño del contexto
+                (``last_prompt_tokens``). El resumen de la memoria suma su
+                coste pero no cambia esa medida.
+        """
         if usage is None:
             return
         self.prompt_tokens += usage.prompt_token_count or 0
         self.output_tokens += usage.candidates_token_count or 0
         self.thinking_tokens += usage.thoughts_token_count or 0
-        self.last_prompt_tokens = usage.prompt_token_count or 0
+        if conversation:
+            self.last_prompt_tokens = usage.prompt_token_count or 0
 
 
 @dataclass
@@ -266,7 +279,7 @@ class TouristAgent:
     def _summarize(self, prompt: str) -> str:
         """Pide al LLM el resumen de los turnos antiguos (sin herramientas)."""
         response = self.client.generate(prompt)
-        self.last_trace.add_usage(response.usage_metadata)
+        self.last_trace.add_usage(response.usage_metadata, conversation=False)
         return response.text or ""
 
     def reset(self) -> None:

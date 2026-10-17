@@ -16,7 +16,12 @@ QUERY_TEMPLATE = "task: search result | query: {query}"
 
 
 class GeminiEmbedder:
-    """Convierte fragmentos y preguntas en vectores normalizados."""
+    """Convierte fragmentos y preguntas en vectores.
+
+    La API devuelve los vectores ya normalizados (norma 1); el notebook lo
+    comprueba. La búsqueda no depende de ello porque Chroma usa distancia
+    coseno.
+    """
 
     def __init__(self, client: GeminiClient | None = None, config: RAGConfig = RAG):
         """Crea el generador de embeddings.
