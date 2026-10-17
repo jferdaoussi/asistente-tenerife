@@ -364,3 +364,41 @@ consecuencias**.
   podrían salir peor; en este dominio (redactar a partir de fragmentos
   recuperados y datos de herramientas) no se observa. LOW sigue disponible
   con `--thinking LOW` o cambiando la configuración.
+
+## D13 · App web: Gradio como capa fina, un agente por visitante
+
+- **Contexto:** el apartado opcional pide una interfaz web desplegada y
+  observabilidad; la app usa la clave del autor como secreto (D11), con la
+  cuota gratuita compartida entre todos los visitantes.
+- **Decisiones:**
+  - **Capa fina sobre el agente:** `app.py` solo conecta `chat_stream` (el
+    streaming) y `last_trace` (la observabilidad) con Gradio. La
+    presentación de la traza está en `src/trace_view.py`, sin Gradio, y se
+    prueba con pytest.
+  - **Un agente por visitante** (`gr.State`): con uno global, las memorias
+    se mezclarían (el "allí" de un visitante se resolvería con el sitio de
+    otro) y "Nueva conversación" borraría la de los demás. El índice de la
+    guía, que no guarda estado de la conversación, se comparte y se
+    construye una sola vez al arrancar.
+  - **Límites** (`AppConfig`): 20 mensajes por conversación, 500 caracteres
+    por mensaje y 2 peticiones a la vez. Una pregunta gasta ~3 peticiones
+    de las 500 diarias.
+  - **Modelos de respaldo activados** (en la evaluación se desactivaron
+    para comparar en igualdad): si Flash-Lite agota su cuota, responde
+    Gemini 3.6 Flash, que tiene la suya.
+  - **Fuentes separadas por uso:** un fragmento cuenta como citado si
+    alguna de sus páginas aparece citada en la respuesta. Los citados se
+    muestran con su texto; los recuperados que no se usaron (p. ej. otros
+    sitios de la misma zona que superan el umbral), solo con su título. Así
+    se ve qué encontró la búsqueda sin confundirlo con la base de la
+    respuesta.
+  - **Texto palabra a palabra:** Flash-Lite envía el streaming en trozos
+    grandes y la respuesta aparecía casi de golpe; la app los reparte en
+    palabras con una pausa de 30 ms. Es solo presentación: la latencia del
+    panel es la real.
+  - **Despliegue en Hugging Face Spaces** con `deploy/publish.py`, que sube
+    solo `app.py`, `src/`, la guía y unas dependencias reducidas (sin
+    Jupyter ni pytest).
+- **Alternativas:** Streamlit (reejecuta todo el script en cada interacción
+  y el streaming de chat es menos directo); `gr.ChatInterface` (más corto,
+  pero sin sitio para el panel de observabilidad).

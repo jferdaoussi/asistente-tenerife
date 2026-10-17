@@ -39,7 +39,7 @@ from typing import Any
 import pandas as pd
 
 from src.agent import TouristAgent
-from src.chunking import chunk_by_section, chunk_fixed, chunk_recursive
+from src.chunking import chunk_by_section, chunk_fixed, chunk_recursive, cited_pages
 from src.config import CHROMA_DIR, MODEL, ROOT_DIR
 from src.embeddings import GeminiEmbedder
 from src.judge import Judge
@@ -69,9 +69,6 @@ CHUNKERS: dict[str, Callable] = {
 #: Comportamientos en los que no debe darse un pronóstico.
 NO_FORECAST = {"rechazar", "preguntar_zona", "explicar_sin_pronostico"}
 
-PAGE_CITATION = re.compile(r"p\.\s*(\d+)(?:\s*[-–]\s*(\d+))?")
-
-
 # --- Utilidades ---------------------------------------------------------------
 
 
@@ -90,15 +87,6 @@ def contains_evidence(text: str, evidence: list[str]) -> bool:
     """True si el texto contiene alguna de las frases de evidencia."""
     text = normalize(text)
     return any(normalize(phrase) in text for phrase in evidence)
-
-
-def cited_pages(text: str) -> set[int]:
-    """Páginas citadas en una respuesta ("p. 8" o "p. 8-11")."""
-    pages: set[int] = set()
-    for start, end in PAGE_CITATION.findall(text):
-        first = int(start)
-        pages.update(range(first, int(end or first) + 1))
-    return pages
 
 
 def accepted_dates(spec: str, today: date) -> set[str]:

@@ -26,12 +26,14 @@ Cloud Computing y DevOps (Pontia).
 
 ```
 asistente-tenerife/
+├── app.py          # App web (Gradio)
 ├── notebook/       # Notebook principal (asistente_tenerife.ipynb)
 ├── data/           # Guía turística (TENERIFE.pdf)
 ├── src/            # Código del asistente (módulos reutilizables)
 ├── eval/           # Conjunto de preguntas y resultados de la evaluación
 ├── tests/          # Tests automáticos (pytest)
 ├── docs/           # Decisiones técnicas e informe final
+├── deploy/         # Publicación de la app en Hugging Face Spaces
 ├── requirements.txt
 └── .env.example    # Plantilla de configuración de la API key
 ```
@@ -86,3 +88,36 @@ jupyter lab notebook/asistente_tenerife.ipynb
 La primera celda añade la raíz del repositorio a la ruta de importación, de
 modo que el notebook usa los módulos de `src/`. Sin clave de Gemini, las
 celdas que llaman a la API muestran un aviso y el resto funciona.
+
+## App web
+
+![App web del asistente](docs/img/app.jpg)
+
+- **Chat en streaming**: la respuesta aparece palabra a palabra.
+- **Fuentes desplegables** bajo cada respuesta: los fragmentos de la guía
+  citados (con su texto), los datos externos (tiempo, ruta) y, aparte, lo que
+  la búsqueda recuperó pero la respuesta no usó.
+- **Panel de observabilidad**: latencia, tokens, vueltas del agente, uso de
+  la memoria frente a su presupuesto y cada herramienta con sus argumentos,
+  su resultado y su duración.
+- **Ejemplos** que se preguntan con un clic y una conversación propia por
+  visitante.
+
+Para arrancarla en local (con la clave en `.env`):
+
+```bash
+python app.py
+```
+
+y abrir http://127.0.0.1:7860.
+
+### Publicarla en Hugging Face Spaces
+
+1. Inicia sesión una vez con un token de escritura: `hf auth login`.
+2. Publica: `python deploy/publish.py` (crea el Space
+   `usuario/asistente-tenerife` y sube solo lo que necesita la app).
+3. En el Space, *Settings → Variables and secrets*, añade el secreto
+   `GEMINI_API_KEY`. La clave nunca se sube al repositorio.
+
+Límites de la demo (`AppConfig` en `src/config.py`): 20 mensajes por
+conversación, 500 caracteres por mensaje y 2 peticiones a la vez.

@@ -45,6 +45,8 @@ SECTION_MARK = "• "
 BLOCK_START = re.compile(r"^(?:o |▪ |- |Nota:|Curiosidades:)")
 #: Subcabeceras de zona dentro de "Sitios para comer" (p. ej. "o Zona Norte").
 SUBZONE = re.compile(r"^o Zona (Norte|Sur)$")
+#: Cita de página en un texto: "p. 8" o "p. 8-11".
+PAGE_CITATION = re.compile(r"p\.\s*(\d+)(?:\s*[-–]\s*(\d+))?")
 
 
 @dataclass(frozen=True)
@@ -336,3 +338,15 @@ def citation(sitio: str, page_start: int, page_end: int) -> str:
     )
     suffix = f" · {sitio}" if sitio else ""
     return f"{SOURCE_NAME}, {pages}{suffix}"
+
+
+def cited_pages(text: str) -> set[int]:
+    """Páginas citadas en un texto ("p. 8" o "p. 8-11"), con los rangos expandidos.
+
+    Sirve para una respuesta del asistente y para la cita de un fragmento.
+    """
+    pages: set[int] = set()
+    for start, end in PAGE_CITATION.findall(text):
+        first = int(start)
+        pages.update(range(first, int(end or first) + 1))
+    return pages

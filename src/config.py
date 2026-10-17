@@ -181,11 +181,33 @@ class WeatherConfig:
     retry_delay_s: float = 1.0
 
 
+@dataclass(frozen=True)
+class AppConfig:
+    """Límites de la app web, que usa la clave del autor (D11, D13).
+
+    Attributes:
+        max_messages: Mensajes por conversación; protege la cuota diaria,
+            compartida por todos los visitantes.
+        max_message_chars: Longitud máxima de cada mensaje.
+        concurrency: Peticiones que se atienden a la vez; el resto espera en
+            cola.
+        word_delay_s: Pausa entre palabras al mostrar la respuesta. Flash-Lite
+            envía trozos grandes y el texto aparecería de golpe; con la pausa
+            se lee como si se escribiera. No cambia la latencia medida.
+    """
+
+    max_messages: int = 20
+    max_message_chars: int = 500
+    concurrency: int = 2
+    word_delay_s: float = 0.03
+
+
 MODEL = ModelConfig()
 RAG = RAGConfig()
 MEMORY = MemoryConfig()
 AGENT = AgentConfig()
 WEATHER = WeatherConfig()
+APP = AppConfig()
 TOOL_LOG_PATH = LOG_DIR / "tools.jsonl"
 
 
@@ -215,6 +237,7 @@ if __name__ == "__main__":
         ("Memoria", MEMORY),
         ("Agente", AGENT),
         ("Tiempo", WEATHER),
+        ("App", APP),
     )
     for name, cfg in configs:
         print(f"[{name}]")

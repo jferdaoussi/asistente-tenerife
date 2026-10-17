@@ -1,0 +1,9 @@
+# Dependencias de la app desplegada (Gradio lo instala el propio Space).
+google-genai==2.31.0
+httpx==0.28.1
+pypdf==6.20.1
+chromadb==1.5.9
+python-dotenv==1.2.4
+pydantic==2.14.1
+requests==2.34.2
+tzdata==2026.5
