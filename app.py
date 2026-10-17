@@ -8,6 +8,7 @@ comparte.
 Uso local: ``python app.py`` y abrir http://127.0.0.1:7860.
 """
 
+import os
 import re
 import threading
 import time
@@ -259,6 +260,28 @@ def respond(
     yield history, "", session, trace_html(trace) + session.stats.html(APP.max_messages)
 
 
+def credentials() -> tuple[str, str] | None:
+    """Usuario y contraseña de acceso, si están definidos en el entorno.
+
+    En el despliegue se definen ``APP_USER`` y ``APP_PASSWORD`` como secretos
+    para que solo entre quien los conozca (y no se gaste la cuota). En local,
+    sin ellos, la app abre sin pedir acceso.
+    """
+    user = os.getenv("APP_USER", "").strip()
+    password = os.getenv("APP_PASSWORD", "").strip()
+    return (user, password) if user and password else None
+
+
+def server_options() -> dict[str, Any]:
+    """Dirección y puerto del servidor.
+
+    Los hostings como Render indican el puerto en ``PORT``; entonces se
+    escucha en todas las interfaces. En local se usan los valores de Gradio.
+    """
+    port = os.getenv("PORT")
+    return {"server_name": "0.0.0.0", "server_port": int(port)} if port else {}
+
+
 def reset() -> tuple[list[Message], None, str, str]:
     """Empieza una conversación nueva (agente y memoria nuevos)."""
     return [], None, EMPTY_PANEL, ""
@@ -317,4 +340,10 @@ if __name__ == "__main__":
         shared_tools()  # Índice listo antes de la primera pregunta.
     except Exception as err:
         print(f"Índice no disponible al arrancar: {err}")
-    demo.launch(theme=THEME, css=CSS)
+    demo.launch(
+        theme=THEME,
+        css=CSS,
+        auth=credentials(),
+        auth_message="Demo privada del asistente turístico de Tenerife.",
+        **server_options(),
+    )

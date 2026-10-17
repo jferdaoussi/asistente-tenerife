@@ -1,4 +1,6 @@
-# Dependencias de la app desplegada (Gradio lo instala el propio Space).
+# Dependencias de la app desplegada: solo lo que usa app.py
+# (sin Jupyter, pandas, matplotlib ni herramientas de desarrollo).
+gradio==6.30.0
 google-genai==2.31.0
 httpx==0.28.1
 pypdf==6.20.1

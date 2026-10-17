@@ -170,3 +170,19 @@ def test_respond_enforces_limits(monkeypatch):
 def test_respond_ignores_empty_message():
     steps = list(app.respond("   ", [], None))
     assert steps[0][0] == []
+
+
+def test_credentials_and_server_options(monkeypatch):
+    monkeypatch.delenv("APP_USER", raising=False)
+    monkeypatch.delenv("APP_PASSWORD", raising=False)
+    monkeypatch.delenv("PORT", raising=False)
+    assert app.credentials() is None
+    assert app.server_options() == {}
+
+    monkeypatch.setenv("APP_USER", "profesor")
+    assert app.credentials() is None  # Hacen falta los dos.
+    monkeypatch.setenv("APP_PASSWORD", "secreta")
+    assert app.credentials() == ("profesor", "secreta")
+
+    monkeypatch.setenv("PORT", "10000")
+    assert app.server_options() == {"server_name": "0.0.0.0", "server_port": 10000}

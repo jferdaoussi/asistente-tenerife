@@ -396,9 +396,16 @@ consecuencias**.
     grandes y la respuesta aparecía casi de golpe; la app los reparte en
     palabras con una pausa de 30 ms. Es solo presentación: la latencia del
     panel es la real.
-  - **Despliegue en Hugging Face Spaces** con `deploy/publish.py`, que sube
-    solo `app.py`, `src/`, la guía y unas dependencias reducidas (sin
-    Jupyter ni pytest).
+  - **Despliegue en Render** (*Web Service* gratuito, desde el repositorio
+    de GitHub) con dependencias reducidas (`deploy/requirements.txt`, sin
+    Jupyter ni pytest). Se intentó primero Hugging Face Spaces, pero alojar
+    Gradio en su CPU gratuita exige ya la suscripción PRO (error 402).
+    Render, además, no expone los ficheros del repositorio: la guía no
+    queda descargable.
+  - **Acceso con usuario y contraseña** (`auth` de Gradio, leídos de
+    `APP_USER` y `APP_PASSWORD`): la demo es solo para el autor y el
+    profesor, y así nadie más gasta la cuota. En local, sin esas variables,
+    la app abre sin pedir acceso.
 - **Alternativas:** Streamlit (reejecuta todo el script en cada interacción
   y el streaming de chat es menos directo); `gr.ChatInterface` (más corto,
   pero sin sitio para el panel de observabilidad).

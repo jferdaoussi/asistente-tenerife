@@ -33,7 +33,7 @@ asistente-tenerife/
 ├── eval/           # Conjunto de preguntas y resultados de la evaluación
 ├── tests/          # Tests automáticos (pytest)
 ├── docs/           # Decisiones técnicas e informe final
-├── deploy/         # Publicación de la app en Hugging Face Spaces
+├── deploy/         # Despliegue de la app en Render
 ├── requirements.txt
 └── .env.example    # Plantilla de configuración de la API key
 ```
@@ -111,13 +111,12 @@ python app.py
 
 y abrir http://127.0.0.1:7860.
 
-### Publicarla en Hugging Face Spaces
+### Despliegue
 
-1. Inicia sesión una vez con un token de escritura: `hf auth login`.
-2. Publica: `python deploy/publish.py` (crea el Space
-   `usuario/asistente-tenerife` y sube solo lo que necesita la app).
-3. En el Space, *Settings → Variables and secrets*, añade el secreto
-   `GEMINI_API_KEY`. La clave nunca se sube al repositorio.
+La app está desplegada en Render como *Web Service* gratuito, con acceso por
+usuario y contraseña (`APP_USER` y `APP_PASSWORD`) y la clave de Gemini como
+secreto del servicio. Los pasos y la configuración están en
+[`deploy/README.md`](deploy/README.md).
 
 Límites de la demo (`AppConfig` en `src/config.py`): 20 mensajes por
 conversación, 500 caracteres por mensaje y 2 peticiones a la vez.
