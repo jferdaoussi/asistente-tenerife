@@ -525,6 +525,7 @@ def agent_summary(frame: pd.DataFrame) -> pd.DataFrame:
     summary["fidelidad"] = grouped["fidelidad"].mean()
     summary["relevancia"] = grouped["relevancia"].mean()
     summary["latencia_media_s"] = grouped["total_s"].mean()
+    summary["latencia_mediana_s"] = grouped["total_s"].median()
     summary["latencia_p90_s"] = grouped["total_s"].quantile(0.9)
     summary["primer_token_medio_s"] = grouped["primer_token_s"].mean()
     summary["tokens_entrada_medios"] = grouped["prompt_tokens"].mean()

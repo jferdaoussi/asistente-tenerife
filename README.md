@@ -3,24 +3,86 @@
 Asistente conversacional que responde preguntas sobre Tenerife a partir de una
 guía turística en PDF. Combina:
 
-- **RAG**: búsqueda semántica sobre la guía, con citas de la fuente.
-- **Diálogo multiturno**: memoria de la conversación con control de tokens.
-- **Function calling**: consulta de la previsión del tiempo (`get_weather`).
+- **RAG**: búsqueda semántica sobre la guía, con la página citada en cada
+  dato.
+- **Diálogo multiturno**: memoria de la conversación con presupuesto de
+  tokens.
+- **Function calling**: pronóstico del tiempo (`get_weather`, Open-Meteo) y
+  rutas en Google Maps, coordinados por un agente propio.
+- **App web** con streaming y panel de observabilidad:
+  **https://asistente-tenerife.onrender.com/** (acceso con usuario y
+  contraseña, facilitados en la entrega; la primera visita puede tardar un
+  minuto en despertar el servicio).
 
 Proyecto final de la asignatura *Large Language Models* del Máster en IA,
 Cloud Computing y DevOps (Pontia).
 
-> 🚧 En desarrollo. Este README se completará con la arquitectura, los
-> resultados de la evaluación y la guía de uso.
+| Entregable | Dónde |
+|---|---|
+| Notebook principal | [`notebook/asistente_tenerife.ipynb`](notebook/asistente_tenerife.ipynb) |
+| Informe final | [`docs/informe.pdf`](docs/informe.pdf) ([versión Markdown](docs/informe.md)) |
+| Decisiones técnicas (D1–D13) | [`docs/decisiones.md`](docs/decisiones.md) |
+| App web | https://asistente-tenerife.onrender.com/ ([despliegue](deploy/README.md)) |
 
 ## Stack
 
 | Pieza | Elección |
 |---|---|
-| LLM | Google Gemini (`gemini-3.5-flash-lite`, con respaldo automático a modelos Flash) mediante el SDK `google-genai` |
-| Embeddings | Gemini Embedding 2 |
-| Base de datos vectorial | Chroma (local, persistente) |
-| Previsión del tiempo | Open-Meteo (sin API key) |
+| LLM | Google Gemini `gemini-3.5-flash-lite` (razonamiento `MINIMAL`, respaldo automático a modelos Flash) con el SDK `google-genai` |
+| Embeddings | Gemini Embedding 2, 768 dimensiones, asimétricos |
+| Base de datos vectorial | Chroma (local, persistente, distancia coseno) |
+| Chunking | Propio, un fragmento por sitio de la guía (comparado con tamaño fijo y LangChain) |
+| Herramientas | `buscar_guia` (RAG), `get_weather` (Open-Meteo, sin clave), `como_llegar` (Google Maps) |
+| Validación | Pydantic (esquemas JSON de las herramientas y salida del juez) |
+| Interfaz | Gradio, desplegada en Render |
+
+## Arquitectura
+
+```
+Usuario ──► app.py (Gradio) ──► Agente (src/agent.py) ──► Gemini Flash-Lite
+                                  │  system prompt con reglas y fecha de hoy
+                                  │  bucle LLM → herramientas → LLM (máx. 4 vueltas)
+                                  │  memoria con presupuesto de 6.000 tokens
+                                  ▼
+             buscar_guia ─► Chroma (20 fragmentos, uno por sitio)
+             get_weather ─► Open-Meteo (16 lugares, validación Pydantic, log JSONL)
+             como_llegar ─► enlace de Google Maps
+```
+
+| Módulo | Responsabilidad |
+|---|---|
+| `src/config.py` | Todos los parámetros (modelo, RAG, memoria, agente, tiempo, app) |
+| `src/llm.py` | Cliente de Gemini: reintentos, modelos de respaldo, streaming, errores legibles |
+| `src/loader.py` · `src/chunking.py` | Lectura y limpieza del PDF; tres estrategias de chunking |
+| `src/embeddings.py` · `src/rag.py` | Embeddings y búsqueda en Chroma con filtros por zona |
+| `src/weather.py` · `src/tools.py` · `src/tool_log.py` | Herramientas con esquema Pydantic, ejecución segura y registro |
+| `src/prompts.py` · `src/memory.py` · `src/agent.py` | Reglas del asistente, memoria en tres niveles y bucle del agente |
+| `src/evaluation.py` · `src/judge.py` | Evaluación con 36 preguntas y juez LLM validado |
+| `src/trace_view.py` · `app.py` | Panel de observabilidad y app web |
+
+## Resultados
+
+Evaluación con 36 preguntas fijas (`eval/preguntas.jsonl`): guía, datos que
+la guía no tiene, fuera de dominio, tiempo, rutas, *prompt injection* y
+seguimiento. Detalle en la sección 9 del notebook.
+
+| Recuperación (23 preguntas) | recall@1 | recall@4 | MRR |
+|---|---|---|---|
+| **Chunking por sitio (elegido)** | **0,91** | 0,96 | **0,93** |
+| Tamaño fijo | 0,83 | 0,96 | 0,88 |
+| LangChain recursivo | 0,65 | 1,00 | 0,78 |
+
+| Asistente (configuración final, `MINIMAL`) | Resultado |
+|---|---|
+| Herramienta correcta / lugar y fecha del tiempo | 100 % / 100 % |
+| Evidencia recuperada / página citada | 96 % / 96 % |
+| Comportamiento correcto (juez) | 100 % |
+| Fidelidad / relevancia (juez, 1-5) | 4,97 / 5,00 |
+| Latencia mediana | 3,0 s (10,0 s con `LOW`) |
+
+El juez LLM (Flash-Lite) se validó frente a una revisión independiente: 100 %
+de acuerdo en fidelidad (±1) y ninguna alucinación aprobada, también fuera de
+muestra.
 
 ## Estructura
 
@@ -120,3 +182,19 @@ secreto del servicio. Los pasos y la configuración están en
 
 Límites de la demo (`AppConfig` en `src/config.py`): 20 mensajes por
 conversación, 500 caracteres por mensaje y 2 peticiones a la vez.
+
+## Evaluación y tests
+
+Repetir la evaluación (los resultados se guardan en `eval/resultados/` y se
+reutilizan; unas 250 peticiones a la API):
+
+```bash
+python -m src.evaluation --paso todo --thinking MINIMAL
+```
+
+Tests (113, sin llamadas a la API) y estilo PEP 8:
+
+```bash
+pytest
+ruff check .
+```
