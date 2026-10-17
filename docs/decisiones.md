@@ -269,7 +269,7 @@ consecuencias**.
     solo si no hay ninguno, preguntar. Comprobado en la misma conversación.
 - **Consecuencias:** latencia de 3-4 s en respuestas sin herramientas y de
   12-30 s con 2-3 vueltas (a medir en la evaluación, junto con el nivel de
-  razonamiento LOW frente a MINIMAL). La fidelidad depende de que el modelo
+  razonamiento LOW frente a MINIMAL: ver D12). La fidelidad depende de que el modelo
   siga las reglas: se medirá con un juez LLM.
 
 ## D10 · Evaluación con conjunto fijo, evidencia literal y juez LLM validado
@@ -330,3 +330,37 @@ consecuencias**.
   historial de git y Google revoca las claves que detecta expuestas);
   enviar la clave al profesor (cuota compartida y ligada a la cuenta del
   autor).
+
+## D12 · Razonamiento del modelo: MINIMAL en lugar de LOW
+
+- **Contexto:** Flash-Lite permite elegir cuánto razona antes de responder.
+  El agente empezó con LOW; la latencia (10-30 s en turnos con
+  herramientas) era el punto más débil del asistente.
+- **Experimento:** las 36 preguntas de la evaluación (D10) con LOW y con
+  MINIMAL, sin modelos de respaldo y en la misma franja horaria (17/10/2026,
+  12:25-12:45), para que la carga de la API sea comparable.
+
+  | Métrica | LOW | MINIMAL |
+  |---|---|---|
+  | Herramientas correctas | 100 % | 100 % |
+  | Evidencia recuperada | 96 % | 96 % |
+  | Página citada | 91 % | 96 % |
+  | Comportamiento (juez) | 97 % | 100 % |
+  | Fidelidad / relevancia (juez, 1-5) | 4,83 / 4,94 | 4,97 / 5,00 |
+  | Latencia mediana | 9,9 s | 3,0 s |
+  | Latencia media | 9,5 s | 9,9 s |
+  | Tokens de razonamiento medios | 17 | 0 |
+
+- **Decisión:** `thinking_level = "MINIMAL"` por defecto (`src/config.py`).
+- **Por qué:** la calidad es igual o algo mejor (con 36 preguntas, las
+  diferencias pequeñas pueden ser variación entre ejecuciones) y la latencia
+  típica baja a un tercio. La lentitud de LOW no viene de razonar mucho
+  (17 tokens de media), sino de activar el modo de razonamiento.
+- **Lectura de la latencia:** se usa la mediana. La media de MINIMAL la
+  suben 6 preguntas de unos 45 s, todas esperando el primer token: casi
+  seguro esperas por el límite de 15 peticiones/min, que MINIMAL alcanza
+  antes porque responde más deprisa. No es un coste del modo de razonamiento.
+- **Consecuencias:** las preguntas que exigieran encadenar razonamientos
+  podrían salir peor; en este dominio (redactar a partir de fragmentos
+  recuperados y datos de herramientas) no se observa. LOW sigue disponible
+  con `--thinking LOW` o cambiando la configuración.

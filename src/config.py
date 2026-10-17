@@ -36,8 +36,8 @@ class ModelConfig:
             esta probabilidad acumulada.
         max_output_tokens: Longitud máxima de cada respuesta.
         thinking_level: Cuánto "razona" el modelo antes de responder
-            (MINIMAL, LOW, MEDIUM, HIGH). Más razonamiento implica más
-            latencia y tokens; para un asistente turístico basta con LOW.
+            (MINIMAL, LOW, MEDIUM, HIGH). MINIMAL según la evaluación:
+            misma calidad que LOW con un tercio de la latencia (D12).
         fallback_models: Modelos de respaldo que se prueban, en orden, si el
             principal está saturado (errores 429/5xx).
         retry_attempts: Intentos por modelo antes de pasar al siguiente.
@@ -63,7 +63,7 @@ class ModelConfig:
     temperature: float = 0.3
     top_p: float = 0.95
     max_output_tokens: int = 1024
-    thinking_level: str = "LOW"
+    thinking_level: str = "MINIMAL"
     fallback_models: tuple[str, ...] = ("gemini-3.6-flash", "gemini-3.8-flash")
     retry_attempts: int = 2
     timeout_s: int = 30

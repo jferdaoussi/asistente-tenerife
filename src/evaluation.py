@@ -21,7 +21,7 @@ Pasos:
 Los resultados se guardan en ``eval/resultados/`` y se reutilizan al volver
 a ejecutar, para no depender de la cuota de la API.
 
-Uso: ``python -m src.evaluation --paso todo --thinking LOW``.
+Uso: ``python -m src.evaluation --paso todo --thinking MINIMAL``.
 """
 
 import argparse
