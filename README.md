@@ -10,9 +10,8 @@ guía turística en PDF. Combina:
 - **Function calling**: pronóstico del tiempo (`get_weather`, Open-Meteo) y
   rutas en Google Maps, coordinados por un agente propio.
 - **App web** con streaming y panel de observabilidad:
-  **https://asistente-tenerife.onrender.com/** (acceso con usuario y
-  contraseña, facilitados en la entrega; la primera visita puede tardar un
-  minuto en despertar el servicio).
+  **https://asistente-tenerife.onrender.com/** (la primera visita puede
+  tardar un minuto en despertar el servicio).
 
 Proyecto final de la asignatura *Large Language Models* del Máster en IA,
 Cloud Computing y DevOps (Pontia).
@@ -175,10 +174,10 @@ y abrir http://127.0.0.1:7860.
 
 ### Despliegue
 
-La app está desplegada en Render como *Web Service* gratuito, con acceso por
-usuario y contraseña (`APP_USER` y `APP_PASSWORD`) y la clave de Gemini como
-secreto del servicio. Los pasos y la configuración están en
-[`deploy/README.md`](deploy/README.md).
+La app está desplegada en Render como *Web Service* gratuito, con la clave
+de Gemini como secreto del servicio. Es pública; si se quiere restringir, la
+app pide usuario y contraseña al definir `APP_USER` y `APP_PASSWORD`. Los
+pasos y la configuración están en [`deploy/README.md`](deploy/README.md).
 
 Límites de la demo (`AppConfig` en `src/config.py`): 20 mensajes por
 conversación, 500 caracteres por mensaje y 2 peticiones a la vez.

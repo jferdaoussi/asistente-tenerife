@@ -402,10 +402,12 @@ consecuencias**.
     Gradio en su CPU gratuita exige ya la suscripción PRO (error 402).
     Render, además, no expone los ficheros del repositorio: la guía no
     queda descargable.
-  - **Acceso con usuario y contraseña** (`auth` de Gradio, leídos de
-    `APP_USER` y `APP_PASSWORD`): la demo es solo para el autor y el
-    profesor, y así nadie más gasta la cuota. En local, sin esas variables,
-    la app abre sin pedir acceso.
+  - **Acceso abierto, con inicio de sesión opcional** (`auth` de Gradio,
+    leído de `APP_USER` y `APP_PASSWORD`): la demo se publica abierta para
+    que se pueda probar sin credenciales; el riesgo es solo de cuota (capa
+    gratuita, sin coste) y lo acotan los límites por conversación. Si hiciera
+    falta restringirla, basta con definir esas dos variables en Render, sin
+    tocar el código.
 - **Alternativas:** Streamlit (reejecuta todo el script en cada interacción
   y el streaming de chat es menos directo); `gr.ChatInterface` (más corto,
   pero sin sitio para el panel de observabilidad).

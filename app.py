@@ -263,9 +263,9 @@ def respond(
 def credentials() -> tuple[str, str] | None:
     """Usuario y contraseña de acceso, si están definidos en el entorno.
 
-    En el despliegue se definen ``APP_USER`` y ``APP_PASSWORD`` como secretos
-    para que solo entre quien los conozca (y no se gaste la cuota). En local,
-    sin ellos, la app abre sin pedir acceso.
+    Si se definen ``APP_USER`` y ``APP_PASSWORD`` (secretos del hosting),
+    solo entra quien los conozca y nadie más gasta la cuota. Sin ellos, la
+    app abre sin pedir acceso (la demo desplegada es pública).
     """
     user = os.getenv("APP_USER", "").strip()
     password = os.getenv("APP_PASSWORD", "").strip()

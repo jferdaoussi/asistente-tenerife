@@ -3,7 +3,7 @@
 **Asignatura:** Large Language Models · Máster en IA, Cloud Computing y DevOps (Pontia)<br>
 **Autor:** Jorge El Ferdaoussi García · **Fecha:** 17 de octubre de 2026<br>
 **Repositorio:** github.com/jferdaoussi/asistente-tenerife<br>
-**App:** https://asistente-tenerife.onrender.com/ (acceso con usuario y contraseña)
+**App:** https://asistente-tenerife.onrender.com/
 
 ## 1. Objetivo y resultado
 
@@ -75,8 +75,8 @@ sábado".
 streaming, fuentes separadas entre citadas y consultadas, ejemplos y un panel
 de observabilidad por turno (latencia, tokens, vueltas, uso de la memoria y
 cada herramienta con argumentos, resultado y duración). Cada visitante tiene
-su propio agente. Desplegada en Render con usuario y contraseña y la clave
-como secreto del servidor.
+su propio agente. Desplegada en Render, con la clave como secreto del
+servidor y límites de uso por conversación.
 
 ## 3. Decisiones técnicas
 

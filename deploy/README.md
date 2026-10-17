@@ -24,11 +24,12 @@ En **Environment Variables**:
 |---|---|
 | `PYTHON_VERSION` | `3.12` |
 | `GEMINI_API_KEY` | Clave de Gemini (secreta) |
-| `APP_USER` | Usuario de acceso a la demo |
-| `APP_PASSWORD` | Contraseña de acceso a la demo (secreta) |
+| `APP_USER` | Opcional: usuario de acceso a la demo |
+| `APP_PASSWORD` | Opcional: contraseña de acceso a la demo (secreta) |
 
-Con `APP_USER` y `APP_PASSWORD` la app pide inicio de sesión; sin ellas,
-queda abierta. El puerto lo indica Render en `PORT` y la app lo usa.
+La demo desplegada no las define, así que es pública. Si se añaden las dos,
+la app pide inicio de sesión. El puerto lo indica Render en `PORT` y la app
+lo usa.
 
 ## Notas
 
